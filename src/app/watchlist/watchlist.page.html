@@ -1,0 +1,44 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Watchlist</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="list-content">
+  <p class="movie-count" *ngIf="movies.length > 0">
+    {{ movies.length }} movie{{ movies.length !== 1 ? 's' : '' }}
+  </p>
+
+  <ion-grid *ngIf="movies.length > 0">
+    <ion-row>
+      <ion-col size="6" *ngFor="let movie of movies">
+        <div class="movie-card" (click)="goToDetail(movie)">
+          <div class="poster-wrapper">
+            <img
+              [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
+              [alt]="movie['#TITLE']"
+              class="movie-poster"
+              (error)="$any($event.target).src='assets/no-poster.png'"
+            />
+            <ion-button
+              fill="clear"
+              class="remove-btn"
+              (click)="removeMovie(movie.imdbID, $event)">
+              <ion-icon name="close-circle" color="danger"></ion-icon>
+            </ion-button>
+          </div>
+          <div class="movie-info">
+            <p class="movie-title">{{ movie['#TITLE'] }}</p>
+            <p class="movie-year">{{ movie['#YEAR'] }}</p>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <div class="empty-state" *ngIf="movies.length === 0">
+    <ion-icon name="bookmark-outline" size="large"></ion-icon>
+    <p>Your Watchlist is empty.</p>
+    <p class="sub">Search for movies to add them here.</p>
+  </div>
+</ion-content>

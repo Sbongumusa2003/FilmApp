@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Watched</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="list-content">
+  <p class="movie-count" *ngIf="movies.length > 0">
+    {{ movies.length }} movie{{ movies.length !== 1 ? 's' : '' }} watched
+  </p>
+
+  <ion-grid *ngIf="movies.length > 0">
+    <ion-row>
+      <ion-col size="6" *ngFor="let movie of movies">
+        <div class="movie-card" (click)="goToDetail(movie)">
+          <div class="poster-wrapper">
+            <img
+              [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
+              [alt]="movie['#TITLE']"
+              class="movie-poster"
+              (error)="$any($event.target).src='assets/no-poster.png'"
+            />
+            <div class="times-badge">
+              <ion-icon name="eye"></ion-icon>
+              <span>{{ movie.timesWatched }}x</span>
+            </div>
+
+            <div class="card-actions">
+              <ion-button fill="clear" class="icon-btn" (click)="resetWatched(movie.imdbID, $event)">
+                <ion-icon name="refresh-outline" color="warning"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" class="icon-btn" (click)="removeMovie(movie.imdbID, $event)">
+                <ion-icon name="close-circle" color="danger"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+          <div class="movie-info">
+            <p class="movie-title">{{ movie['#TITLE'] }}</p>
+            <p class="movie-year">{{ movie['#YEAR'] }}</p>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <div class="empty-state" *ngIf="movies.length === 0">
+    <ion-icon name="checkmark-circle-outline" size="large"></ion-icon>
+    <p>No movies watched yet.</p>
+    <p class="sub">Mark movies as watched from the Search page.</p>
+  </div>
+</ion-content>

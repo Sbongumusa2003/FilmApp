@@ -1,0 +1,49 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Search Movies</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="search-content">
+  <div class="search-bar-container">
+    <ion-searchbar
+      [(ngModel)]="searchQuery"
+      placeholder="Search movies..."
+      (ionInput)="filterResults($event)"
+      animated>
+    </ion-searchbar>
+    <ion-button expand="block" (click)="searchMovies()" class="search-btn">
+      Search
+    </ion-button>
+  </div>
+
+  <p class="results-count" *ngIf="hasSearched">
+    {{ filteredMovies.length }} result{{ filteredMovies.length !== 1 ? 's' : '' }}
+  </p>
+
+  <ion-grid *ngIf="filteredMovies.length > 0">
+    <ion-row>
+      <ion-col size="6" *ngFor="let movie of filteredMovies">
+        <div class="movie-card" (click)="goToDetail(movie)">
+          <div class="poster-wrapper">
+            <img
+              [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
+              [alt]="movie['#TITLE']"
+              class="movie-poster"
+              (error)="$any($event.target).src='assets/no-poster.png'"
+            />
+          </div>
+          <div class="movie-info">
+            <p class="movie-title">{{ movie['#TITLE'] }}</p>
+            <p class="movie-year">{{ movie['#YEAR'] }}</p>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <div class="empty-state" *ngIf="hasSearched && filteredMovies.length === 0">
+    <ion-icon name="film-outline" size="large"></ion-icon>
+    <p>No movies found.</p>
+  </div>
+</ion-content>

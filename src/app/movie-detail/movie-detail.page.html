@@ -1,0 +1,49 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/search"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Movie Info</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="detail-content" *ngIf="movie">
+  <div class="poster-hero">
+    <img
+      [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
+      [alt]="movie['#TITLE']"
+      class="hero-poster"
+      (error)="$any($event.target).src='assets/no-poster.png'"
+    />
+    <div class="poster-overlay"></div>
+  </div>
+
+  <div class="movie-details">
+    <h1 class="title">{{ movie['#TITLE'] }}</h1>
+    <p class="year">{{ movie['#YEAR'] }}</p>
+
+    <div class="cast-section" *ngIf="movie['#ACTORS']">
+      <h3 class="section-label">Cast</h3>
+      <p class="cast-text">{{ movie['#ACTORS'] }}</p>
+    </div>
+
+    <div class="action-buttons">
+      <ion-button
+        *ngIf="!inWatched"
+        class="action-btn watchlist-btn"
+        (click)="addToWatchlist()"
+        [disabled]="inWatchlist">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        {{ inWatchlist ? 'In Watchlist' : 'Add to Watchlist' }}
+      </ion-button>
+
+      <ion-button
+        class="action-btn watched-btn"
+        (click)="markAsWatched()"
+        [disabled]="inWatched">
+        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+        {{ inWatched ? 'Watched' : 'Mark as Watched' }}
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
