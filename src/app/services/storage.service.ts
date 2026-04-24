@@ -11,9 +11,13 @@ export class StorageService {
   constructor(private storage: Storage) {
     this.init();
   }
+
   async init() {
     this._storage = await this.storage.create();
   }
+
+  // ─── User Auth ─────────────────────────────────────────────────────────────
+
   async saveUser(email: string, password: string): Promise<void> {
     const users = await this.getUsers();
     users[email] = password;
@@ -22,6 +26,11 @@ export class StorageService {
 
   async getUsers(): Promise<{ [key: string]: string }> {
     return (await this._storage?.get('users')) || {};
+  }
+
+  async userExists(email: string): Promise<boolean> {
+    const users = await this.getUsers();
+    return email in users;
   }
 
   async validateLogin(email: string, password: string): Promise<boolean> {
@@ -40,10 +49,14 @@ export class StorageService {
   async logout(): Promise<void> {
     await this._storage?.remove('currentUser');
   }
+
   async isLoggedIn(): Promise<boolean> {
     const user = await this.getCurrentUser();
     return !!user;
   }
+
+  // ─── Watchlist ──────────────────────────────────────────────────────────────
+
   async getWatchlist(): Promise<Movie[]> {
     return (await this._storage?.get('watchlist')) || [];
   }
@@ -52,7 +65,9 @@ export class StorageService {
     const list = await this.getWatchlist();
     const exists = list.find(m => m.imdbID === movie.imdbID);
     if (!exists) {
-      list.push(movie);
+      // Ensure timesWatched is cleared when adding to watchlist
+      const movieToAdd = { ...movie, timesWatched: 0 };
+      list.push(movieToAdd);
       await this._storage?.set('watchlist', list);
     }
   }
@@ -67,19 +82,26 @@ export class StorageService {
     const list = await this.getWatchlist();
     return list.some(m => m.imdbID === imdbID);
   }
+
+  // ─── Watched List ───────────────────────────────────────────────────────────
+
   async getWatchedList(): Promise<Movie[]> {
     return (await this._storage?.get('watchedList')) || [];
   }
 
   async addToWatched(movie: Movie): Promise<void> {
+    // Remove from watchlist first (move operation)
     await this.removeFromWatchlist(movie.imdbID);
+
     const list = await this.getWatchedList();
     const existing = list.find(m => m.imdbID === movie.imdbID);
     if (existing) {
+      // Increment the times watched counter
       existing.timesWatched = (existing.timesWatched || 1) + 1;
     } else {
-      movie.timesWatched = 1;
-      list.push(movie);
+      // First time watching — set counter to 1
+      const watchedMovie = { ...movie, timesWatched: 1 };
+      list.push(watchedMovie);
     }
     await this._storage?.set('watchedList', list);
   }
@@ -90,13 +112,19 @@ export class StorageService {
     await this._storage?.set('watchedList', updated);
   }
 
+  /**
+   * Resets the "Times Watched" counter for a movie and moves it back to the Watchlist.
+   * Per assignment spec: clicking reset moves the movie back to the Watchlist.
+   */
   async resetTimesWatched(imdbID: string): Promise<void> {
     const list = await this.getWatchedList();
     const movie = list.find(m => m.imdbID === imdbID);
     if (movie) {
-      movie.timesWatched = 0;
+      // Remove from watched list
       await this.removeFromWatched(imdbID);
-      await this.addToWatchlist(movie);
+      // Add back to watchlist with reset counter
+      const resetMovie = { ...movie, timesWatched: 0 };
+      await this.addToWatchlist(resetMovie);
     }
   }
 

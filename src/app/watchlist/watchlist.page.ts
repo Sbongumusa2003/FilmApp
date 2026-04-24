@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 import { StorageService } from '../services/storage.service';
 import { Movie } from '../models/movie.model';
 
@@ -16,7 +16,8 @@ export class WatchlistPage {
   constructor(
     private storageService: StorageService,
     private router: Router,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private toastCtrl: ToastController
   ) {}
 
   async ionViewWillEnter() {
@@ -40,6 +41,12 @@ export class WatchlistPage {
           handler: async () => {
             await this.storageService.removeFromWatchlist(imdbID);
             this.movies = await this.storageService.getWatchlist();
+            const toast = await this.toastCtrl.create({
+              message: 'Removed from Watchlist.',
+              duration: 2000,
+              color: 'medium'
+            });
+            toast.present();
           }
         }
       ]

@@ -20,12 +20,11 @@
               class="movie-poster"
               (error)="$any($event.target).src='assets/no-poster.png'"
             />
-            <ion-button
-              fill="clear"
-              class="remove-btn"
-              (click)="removeMovie(movie.imdbID, $event)">
-              <ion-icon name="close-circle" color="danger"></ion-icon>
-            </ion-button>
+            <div class="card-actions">
+              <ion-button fill="clear" class="icon-btn" (click)="removeMovie(movie.imdbID, $event)" title="Remove from Watchlist">
+                <ion-icon name="close-circle" color="danger"></ion-icon>
+              </ion-button>
+            </div>
           </div>
           <div class="movie-info">
             <p class="movie-title">{{ movie['#TITLE'] }}</p>
@@ -37,7 +36,7 @@
   </ion-grid>
 
   <div class="empty-state" *ngIf="movies.length === 0">
-    <ion-icon name="bookmark-outline" size="large"></ion-icon>
+    <ion-icon name="bookmark-outline"></ion-icon>
     <p>Your Watchlist is empty.</p>
     <p class="sub">Search for movies to add them here.</p>
   </div>

@@ -7,19 +7,21 @@
 
     <div class="login-form">
       <ion-item class="input-item">
-        <ion-label position="floating">Email</ion-label>
         <ion-input
           type="email"
           [(ngModel)]="email"
+          label="Email"
+          label-placement="floating"
           placeholder="your@email.com">
         </ion-input>
       </ion-item>
 
       <ion-item class="input-item">
-        <ion-label position="floating">Password</ion-label>
         <ion-input
           type="password"
           [(ngModel)]="password"
+          label="Password"
+          label-placement="floating"
           placeholder="••••••••">
         </ion-input>
       </ion-item>

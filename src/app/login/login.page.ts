@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { StorageService } from '../services/storage.service';
@@ -9,7 +9,7 @@ import { StorageService } from '../services/storage.service';
   styleUrls: ['./login.page.scss'],
   standalone: false,
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
   email = '';
   password = '';
   isSignUp = false;
@@ -20,6 +20,14 @@ export class LoginPage {
     private toastCtrl: ToastController
   ) {}
 
+  async ngOnInit() {
+    // If user is already logged in, skip login page
+    const loggedIn = await this.storageService.isLoggedIn();
+    if (loggedIn) {
+      this.router.navigate(['/tabs/search'], { replaceUrl: true });
+    }
+  }
+
   async handleAuth() {
     if (!this.email || !this.password) {
       this.showToast('Please fill in all fields.');
@@ -27,14 +35,20 @@ export class LoginPage {
     }
 
     if (this.isSignUp) {
+      // Check if user already exists
+      const exists = await this.storageService.userExists(this.email);
+      if (exists) {
+        this.showToast('An account with this email already exists.');
+        return;
+      }
       await this.storageService.saveUser(this.email, this.password);
       await this.storageService.setCurrentUser(this.email);
-      this.router.navigate(['/tabs/search']);
+      this.router.navigate(['/tabs/search'], { replaceUrl: true });
     } else {
       const valid = await this.storageService.validateLogin(this.email, this.password);
       if (valid) {
         await this.storageService.setCurrentUser(this.email);
-        this.router.navigate(['/tabs/search']);
+        this.router.navigate(['/tabs/search'], { replaceUrl: true });
       } else {
         this.showToast('Invalid email or password.');
       }
@@ -43,6 +57,8 @@ export class LoginPage {
 
   toggleMode() {
     this.isSignUp = !this.isSignUp;
+    this.email = '';
+    this.password = '';
   }
 
   async showToast(msg: string) {

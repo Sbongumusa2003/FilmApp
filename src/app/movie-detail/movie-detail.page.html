@@ -1,49 +1,66 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar class="detail-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/search"></ion-back-button>
+      <ion-back-button defaultHref="/tabs/search" text="Back"></ion-back-button>
     </ion-buttons>
     <ion-title>Movie Info</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="detail-content" *ngIf="movie">
-  <div class="poster-hero">
-    <img
-      [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
-      [alt]="movie['#TITLE']"
-      class="hero-poster"
-      (error)="$any($event.target).src='assets/no-poster.png'"
-    />
-    <div class="poster-overlay"></div>
-  </div>
-
-  <div class="movie-details">
-    <h1 class="title">{{ movie['#TITLE'] }}</h1>
-    <p class="year">{{ movie['#YEAR'] }}</p>
-
-    <div class="cast-section" *ngIf="movie['#ACTORS']">
-      <h3 class="section-label">Cast</h3>
-      <p class="cast-text">{{ movie['#ACTORS'] }}</p>
+<ion-content class="detail-content">
+  <!-- Movie loaded successfully -->
+  <ng-container *ngIf="movie; else noMovie">
+    <div class="poster-hero">
+      <img
+        [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
+        [alt]="movie['#TITLE']"
+        class="hero-poster"
+        (error)="$any($event.target).src='assets/no-poster.png'"
+      />
+      <div class="poster-overlay"></div>
     </div>
 
-    <div class="action-buttons">
-      <ion-button
-        *ngIf="!inWatched"
-        class="action-btn watchlist-btn"
-        (click)="addToWatchlist()"
-        [disabled]="inWatchlist">
-        <ion-icon name="add-outline" slot="start"></ion-icon>
-        {{ inWatchlist ? 'In Watchlist' : 'Add to Watchlist' }}
-      </ion-button>
+    <div class="movie-details">
+      <h1 class="title">{{ movie['#TITLE'] }}</h1>
+      <p class="year">{{ movie['#YEAR'] }}</p>
 
-      <ion-button
-        class="action-btn watched-btn"
-        (click)="markAsWatched()"
-        [disabled]="inWatched">
-        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-        {{ inWatched ? 'Watched' : 'Mark as Watched' }}
-      </ion-button>
+      <div class="cast-section" *ngIf="movie['#ACTORS']">
+        <h3 class="section-label">Cast</h3>
+        <p class="cast-text">{{ movie['#ACTORS'] }}</p>
+      </div>
+
+      <div class="status-badges">
+        <ion-badge *ngIf="inWatchlist" color="medium">In Watchlist</ion-badge>
+        <ion-badge *ngIf="inWatched" color="success">Watched</ion-badge>
+      </div>
+
+      <div class="action-buttons">
+        <ion-button
+          *ngIf="!inWatched"
+          class="action-btn watchlist-btn"
+          (click)="addToWatchlist()"
+          [disabled]="inWatchlist">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          {{ inWatchlist ? 'In Watchlist' : 'Add to Watchlist' }}
+        </ion-button>
+
+        <ion-button
+          class="action-btn watched-btn"
+          (click)="markAsWatched()"
+          [disabled]="inWatched">
+          <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+          {{ inWatched ? 'Already Watched' : 'Mark as Watched' }}
+        </ion-button>
+      </div>
     </div>
-  </div>
+  </ng-container>
+
+  <!-- Fallback if movie data is missing (e.g. page refreshed) -->
+  <ng-template #noMovie>
+    <div class="empty-state">
+      <ion-icon name="film-outline"></ion-icon>
+      <p>Movie details not available.</p>
+      <ion-button (click)="goBack()" fill="outline" color="light">Go Back</ion-button>
+    </div>
+  </ng-template>
 </ion-content>

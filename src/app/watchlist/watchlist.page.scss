@@ -14,12 +14,21 @@ ion-toolbar {
   margin: 0;
 }
 
+ion-grid {
+  padding: 8px;
+}
+
 .movie-card {
   background: #1a1a1a;
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 4px;
   cursor: pointer;
+  transition: transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
 
   .poster-wrapper {
     position: relative;
@@ -32,13 +41,19 @@ ion-toolbar {
       object-fit: cover;
     }
 
-    .remove-btn {
+    .card-actions {
       position: absolute;
       top: 4px;
       right: 4px;
-      --padding-start: 0;
-      --padding-end: 0;
-      font-size: 24px;
+      display: flex;
+      flex-direction: column;
+
+      .icon-btn {
+        --padding-start: 0;
+        --padding-end: 0;
+        font-size: 22px;
+        height: 32px;
+      }
     }
   }
 
@@ -74,6 +89,13 @@ ion-toolbar {
     display: block;
   }
 
-  p { font-size: 16px; margin: 4px 0; }
-  .sub { font-size: 13px; color: #444; }
+  p {
+    font-size: 16px;
+    margin: 4px 0;
+  }
+
+  .sub {
+    font-size: 13px;
+    color: #444;
+  }
 }

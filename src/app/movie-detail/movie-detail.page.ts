@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { NavController, ToastController } from '@ionic/angular';
 import { StorageService } from '../services/storage.service';
 import { Movie } from '../models/movie.model';
 
@@ -17,6 +17,7 @@ export class MovieDetailPage implements OnInit {
 
   constructor(
     private router: Router,
+    private navCtrl: NavController,
     private storageService: StorageService,
     private toastCtrl: ToastController
   ) {
@@ -34,28 +35,40 @@ export class MovieDetailPage implements OnInit {
   async addToWatchlist() {
     if (!this.movie) return;
     if (this.inWatched) {
-      this.showToast('Already in your Watched list!');
+      this.showToast('Already in your Watched list!', 'warning');
+      return;
+    }
+    if (this.inWatchlist) {
+      this.showToast('Already in your Watchlist!', 'warning');
       return;
     }
     await this.storageService.addToWatchlist(this.movie);
     this.inWatchlist = true;
-    this.showToast('Added to Watchlist!');
+    this.showToast('Added to Watchlist! 🎬', 'success');
   }
 
   async markAsWatched() {
     if (!this.movie) return;
+    if (this.inWatched) {
+      this.showToast('Already marked as Watched!', 'warning');
+      return;
+    }
     await this.storageService.addToWatched(this.movie);
     this.inWatched = true;
     this.inWatchlist = false;
-    this.showToast('Marked as Watched!');
+    this.showToast('Marked as Watched! ✅', 'success');
   }
 
   goBack() {
-    history.back();
+    this.navCtrl.back();
   }
 
-  async showToast(msg: string) {
-    const toast = await this.toastCtrl.create({ message: msg, duration: 2000, color: 'success' });
+  async showToast(msg: string, color: string = 'success') {
+    const toast = await this.toastCtrl.create({
+      message: msg,
+      duration: 2000,
+      color: color
+    });
     toast.present();
   }
 }
