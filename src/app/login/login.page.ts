@@ -35,7 +35,6 @@ export class LoginPage implements OnInit {
     }
 
     if (this.isSignUp) {
-      // Check if user already exists
       const exists = await this.storageService.userExists(this.email);
       if (exists) {
         this.showToast('An account with this email already exists.');
