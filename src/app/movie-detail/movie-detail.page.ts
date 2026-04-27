@@ -44,7 +44,7 @@ export class MovieDetailPage implements OnInit {
     }
     await this.storageService.addToWatchlist(this.movie);
     this.inWatchlist = true;
-    this.showToast('Added to Watchlist! 🎬', 'success');
+    this.showToast('Added to Watchlist!', 'success');
   }
 
   async markAsWatched() {
@@ -56,7 +56,7 @@ export class MovieDetailPage implements OnInit {
     await this.storageService.addToWatched(this.movie);
     this.inWatched = true;
     this.inWatchlist = false;
-    this.showToast('Marked as Watched! ✅', 'success');
+    this.showToast('Marked as Watched!', 'success');
   }
 
   goBack() {

@@ -28,7 +28,6 @@
     <span *ngIf="searchQuery"> for "{{ lastQuery }}"</span>
   </p>
 
-  <!-- Filter bar (only shown after search) -->
   <div class="filter-bar" *ngIf="movies.length > 0">
     <ion-searchbar
       [(ngModel)]="filterQuery"
