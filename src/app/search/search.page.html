@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-title>Search Movies</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="logout()" fill="clear" color="medium">
+      <ion-button (click)="logout()">
         <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -14,8 +14,7 @@
     <ion-searchbar
       [(ngModel)]="searchQuery"
       placeholder="Search movies..."
-      (keyup.enter)="searchMovies()"
-      (ionClear)="clearSearch()"
+      (ionInput)="filterResults($event)"
       animated>
     </ion-searchbar>
     <ion-button expand="block" (click)="searchMovies()" class="search-btn">
@@ -25,18 +24,7 @@
 
   <p class="results-count" *ngIf="hasSearched">
     {{ filteredMovies.length }} result{{ filteredMovies.length !== 1 ? 's' : '' }}
-    <span *ngIf="searchQuery"> for "{{ lastQuery }}"</span>
   </p>
-
-  <div class="filter-bar" *ngIf="movies.length > 0">
-    <ion-searchbar
-      [(ngModel)]="filterQuery"
-      placeholder="Filter results..."
-      (ionInput)="filterResults($event)"
-      animated
-      debounce="200">
-    </ion-searchbar>
-  </div>
 
   <ion-grid *ngIf="filteredMovies.length > 0">
     <ion-row>
@@ -59,14 +47,8 @@
     </ion-row>
   </ion-grid>
 
-  <div class="empty-state" *ngIf="hasSearched && filteredMovies.length === 0 && !isLoading">
-    <ion-icon name="film-outline"></ion-icon>
+  <div class="empty-state" *ngIf="hasSearched && filteredMovies.length === 0">
+    <ion-icon name="film-outline" size="large"></ion-icon>
     <p>No movies found.</p>
-    <p class="sub">Try a different search term.</p>
-  </div>
-
-  <div class="initial-state" *ngIf="!hasSearched">
-    <ion-icon name="search-outline"></ion-icon>
-    <p>Search for movies to get started.</p>
   </div>
 </ion-content>
