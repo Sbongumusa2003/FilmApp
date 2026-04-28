@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { NavController, ToastController } from '@ionic/angular';
+import { NavController, ToastController, LoadingController } from '@ionic/angular';
 import { StorageService } from '../services/storage.service';
-import { Movie } from '../models/movie.model';
+import { MovieService } from '../services/movie.service';
+import { Movie, normalizeMovie } from '../models/movie.model';
 
 @Component({
   selector: 'app-movie-detail',
@@ -19,17 +20,43 @@ export class MovieDetailPage implements OnInit {
     private router: Router,
     private navCtrl: NavController,
     private storageService: StorageService,
-    private toastCtrl: ToastController
+    private movieService: MovieService,
+    private toastCtrl: ToastController,
+    private loadingCtrl: LoadingController
   ) {
     const nav = this.router.getCurrentNavigation();
     this.movie = nav?.extras?.state?.['movie'] || null;
   }
 
   async ngOnInit() {
-    if (this.movie) {
-      this.inWatchlist = await this.storageService.isInWatchlist(this.movie.imdbID);
-      this.inWatched = await this.storageService.isInWatched(this.movie.imdbID);
-    }
+    if (!this.movie) return;
+
+    const loading = await this.loadingCtrl.create({ message: 'Loading details...' });
+    await loading.present();
+
+    this.movieService.getMovieById(this.movie.imdbID).subscribe({
+      next: (data: any) => {
+        const results = data.description || [];
+        const fresh = results.find((m: any) =>
+          (m['#IMDB_ID'] || m.imdbID) === this.movie?.imdbID
+        );
+        if (fresh) {
+          this.movie = normalizeMovie(fresh);
+        }
+        loading.dismiss();
+        this.checkListStatus();
+      },
+      error: () => {
+        loading.dismiss();
+        this.checkListStatus();
+      }
+    });
+  }
+
+  private async checkListStatus() {
+    if (!this.movie) return;
+    this.inWatchlist = await this.storageService.isInWatchlist(this.movie.imdbID);
+    this.inWatched = await this.storageService.isInWatched(this.movie.imdbID);
   }
 
   async addToWatchlist() {

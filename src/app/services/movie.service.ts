@@ -13,4 +13,8 @@ export class MovieService {
   searchMovies(query: string): Observable<any> {
     return this.http.get(`${this.baseUrl}?q=${encodeURIComponent(query)}`);
   }
+
+  getMovieById(imdbId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}?q=${encodeURIComponent(imdbId)}`);
+  }
 }
