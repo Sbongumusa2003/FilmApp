@@ -1,0 +1,14 @@
+ion-toolbar { --background: #111; --color: #fff; }
+.stats-content { --background: #0a0a0a; padding: 16px; }
+
+.stat-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  text-align: center;
+
+  .stat-label { color: #888; font-size: 13px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-value { color: #fff; font-size: 32px; font-weight: 700; margin: 0; }
+  .stat-sub   { color: #e50914; font-size: 14px; margin: 4px 0 0; }
+}

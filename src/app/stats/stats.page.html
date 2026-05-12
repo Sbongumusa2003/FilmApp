@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Stats</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="stats-content">
+  <div class="stat-card">
+    <p class="stat-label">Movies Watched</p>
+    <p class="stat-value">{{ totalWatched }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Total Views</p>
+    <p class="stat-value">{{ totalTimesWatched }}</p>
+  </div>
+  <div class="stat-card" *ngIf="topMovie">
+    <p class="stat-label">Most Watched</p>
+    <p class="stat-value">{{ topMovie.title }}</p>
+    <p class="stat-sub">{{ topMovie.timesWatched }}x</p>
+  </div>
+</ion-content>
