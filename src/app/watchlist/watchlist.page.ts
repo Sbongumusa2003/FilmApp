@@ -1,34 +1,41 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
-import { StorageService } from '../services/storage.service';
+import { WatchlistService } from '../services/list.service';
 import { Movie } from '../models/movie.model';
 
 @Component({
   selector: 'app-watchlist',
   templateUrl: './watchlist.page.html',
   styleUrls: ['./watchlist.page.scss'],
-  standalone: false,
+  standalone: false
 })
 export class WatchlistPage {
   movies: Movie[] = [];
 
   constructor(
-    private storageService: StorageService,
+    private watchlistService: WatchlistService,
     private router: Router,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController
   ) {}
 
-  async ionViewWillEnter() {
-    this.movies = await this.storageService.getWatchlist();
+  ionViewWillEnter() {
+    this.loadWatchlist();
+  }
+
+  loadWatchlist() {
+    this.watchlistService.getWatchlist().subscribe({
+      next: data => { this.movies = data; },
+      error: () => { this.showToast('Failed to load watchlist.', 'danger'); }
+    });
   }
 
   goToDetail(movie: Movie) {
     this.router.navigate(['/movie-detail'], { state: { movie } });
   }
 
-  async removeMovie(imdbID: string, event: Event) {
+  async removeMovie(title: string, event: Event) {
     event.stopPropagation();
     const alert = await this.alertCtrl.create({
       header: 'Remove Movie',
@@ -38,19 +45,23 @@ export class WatchlistPage {
         {
           text: 'Remove',
           role: 'destructive',
-          handler: async () => {
-            await this.storageService.removeFromWatchlist(imdbID);
-            this.movies = await this.storageService.getWatchlist();
-            const toast = await this.toastCtrl.create({
-              message: 'Removed from Watchlist.',
-              duration: 2000,
-              color: 'medium'
+          handler: () => {
+            this.watchlistService.removeFromWatchlist(title).subscribe({
+              next: () => {
+                this.movies = this.movies.filter(m => m.title !== title);
+                this.showToast('Removed from Watchlist.', 'medium');
+              },
+              error: () => this.showToast('Failed to remove movie.', 'danger')
             });
-            toast.present();
           }
         }
       ]
     });
     await alert.present();
+  }
+
+  async showToast(msg: string, color: string) {
+    const toast = await this.toastCtrl.create({ message: msg, duration: 2000, color });
+    toast.present();
   }
 }

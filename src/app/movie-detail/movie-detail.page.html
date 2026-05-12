@@ -11,8 +11,8 @@
   <ng-container *ngIf="movie; else noMovie">
     <div class="poster-hero">
       <img
-        [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
-        [alt]="movie['#TITLE']"
+        [src]="movie.poster || 'assets/no-poster.png'"
+        [alt]="movie.title"
         class="hero-poster"
         (error)="$any($event.target).src='assets/no-poster.png'"
       />
@@ -20,17 +20,27 @@
     </div>
 
     <div class="movie-details">
-      <h1 class="title">{{ movie['#TITLE'] }}</h1>
-      <p class="year">{{ movie['#YEAR'] }}</p>
+      <h1 class="title">{{ movie.title }}</h1>
+      <p class="year">{{ movie.year }}</p>
 
-      <div class="cast-section" *ngIf="movie['#ACTORS']">
+      <div class="cast-section" *ngIf="movie.actors">
         <h3 class="section-label">Cast</h3>
-        <p class="cast-text">{{ movie['#ACTORS'] }}</p>
+        <p class="cast-text">{{ movie.actors }}</p>
+      </div>
+
+      <div class="genre-section" *ngIf="movie.genre">
+        <h3 class="section-label">Genre</h3>
+        <div class="genre-chips">
+          <ion-badge *ngFor="let g of movie.genre.split(',')"
+            color="dark" class="genre-chip">{{ g.trim() }}</ion-badge>
+        </div>
       </div>
 
       <div class="status-badges">
         <ion-badge *ngIf="inWatchlist" color="medium">In Watchlist</ion-badge>
-        <ion-badge *ngIf="inWatched" color="success">Watched</ion-badge>
+        <ion-badge *ngIf="inWatched" color="success">
+          Watched {{ movie.timesWatched ? movie.timesWatched + 'x' : '' }}
+        </ion-badge>
       </div>
 
       <div class="action-buttons">
@@ -53,6 +63,7 @@
       </div>
     </div>
   </ng-container>
+
   <ng-template #noMovie>
     <div class="empty-state">
       <ion-icon name="film-outline"></ion-icon>

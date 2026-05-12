@@ -1,89 +1,83 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { NavController, ToastController, LoadingController } from '@ionic/angular';
-import { StorageService } from '../services/storage.service';
-import { MovieService } from '../services/movie.service';
+import { NavController, ToastController } from '@ionic/angular';
+import { WatchlistService, WatchedService } from '../services/list.service';
 import { Movie, normalizeMovie } from '../models/movie.model';
 
 @Component({
   selector: 'app-movie-detail',
   templateUrl: './movie-detail.page.html',
   styleUrls: ['./movie-detail.page.scss'],
-  standalone: false,
+  standalone: false
 })
 export class MovieDetailPage implements OnInit {
   movie: Movie | null = null;
   inWatchlist = false;
-  inWatched = false;
+  inWatched   = false;
 
   constructor(
     private router: Router,
     private navCtrl: NavController,
-    private storageService: StorageService,
-    private movieService: MovieService,
-    private toastCtrl: ToastController,
-    private loadingCtrl: LoadingController
+    private watchlistService: WatchlistService,
+    private watchedService: WatchedService,
+    private toastCtrl: ToastController
   ) {
     const nav = this.router.getCurrentNavigation();
-    this.movie = nav?.extras?.state?.['movie'] || null;
+    const raw = nav?.extras?.state?.['movie'];
+    this.movie = raw ? normalizeMovie(raw) : null;
   }
 
-  async ngOnInit() {
+  ngOnInit() {
+    this.checkListStatus();
+  }
+
+  private checkListStatus() {
     if (!this.movie) return;
 
-    const loading = await this.loadingCtrl.create({ message: 'Loading details...' });
-    await loading.present();
+    this.watchlistService.getWatchlist().subscribe({
+      next: list => {
+        this.inWatchlist = list.some(m => m.imdbID === this.movie?.imdbID);
+      }
+    });
 
-    this.movieService.getMovieById(this.movie.imdbID).subscribe({
-      next: (data: any) => {
-        const results = data.description || [];
-        const fresh = results.find((m: any) =>
-          (m['#IMDB_ID'] || m.imdbID) === this.movie?.imdbID
-        );
-        if (fresh) {
-          this.movie = normalizeMovie(fresh);
-        }
-        loading.dismiss();
-        this.checkListStatus();
-      },
-      error: () => {
-        loading.dismiss();
-        this.checkListStatus();
+    this.watchedService.getWatchedList().subscribe({
+      next: list => {
+        const found = list.find(m => m.imdbID === this.movie?.imdbID);
+        this.inWatched = !!found;
+        if (found) this.movie = { ...this.movie!, ...found };
       }
     });
   }
 
-  private async checkListStatus() {
-    if (!this.movie) return;
-    this.inWatchlist = await this.storageService.isInWatchlist(this.movie.imdbID);
-    this.inWatched = await this.storageService.isInWatched(this.movie.imdbID);
+  addToWatchlist() {
+    if (!this.movie || this.inWatchlist || this.inWatched) return;
+
+    this.watchlistService.addToWatchlist(this.movie).subscribe({
+      next: () => {
+        this.inWatchlist = true;
+        this.showToast('Added to Watchlist!', 'success');
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Could not add to Watchlist.';
+        this.showToast(msg, 'warning');
+      }
+    });
   }
 
-  async addToWatchlist() {
-    if (!this.movie) return;
-    if (this.inWatched) {
-      this.showToast('Already in your Watched list!', 'warning');
-      return;
-    }
-    if (this.inWatchlist) {
-      this.showToast('Already in your Watchlist!', 'warning');
-      return;
-    }
-    await this.storageService.addToWatchlist(this.movie);
-    this.inWatchlist = true;
-    this.showToast('Added to Watchlist!', 'success');
-  }
+  markAsWatched() {
+    if (!this.movie || this.inWatched) return;
 
-  async markAsWatched() {
-    if (!this.movie) return;
-    if (this.inWatched) {
-      this.showToast('Already marked as Watched!', 'warning');
-      return;
-    }
-    await this.storageService.addToWatched(this.movie);
-    this.inWatched = true;
-    this.inWatchlist = false;
-    this.showToast('Marked as Watched!', 'success');
+    this.watchedService.markAsWatched(this.movie).subscribe({
+      next: () => {
+        this.inWatched   = true;
+        this.inWatchlist = false;
+        this.showToast('Marked as Watched!', 'success');
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Could not mark as watched.';
+        this.showToast(msg, 'warning');
+      }
+    });
   }
 
   goBack() {
@@ -91,11 +85,7 @@ export class MovieDetailPage implements OnInit {
   }
 
   async showToast(msg: string, color: string = 'success') {
-    const toast = await this.toastCtrl.create({
-      message: msg,
-      duration: 2000,
-      color: color
-    });
+    const toast = await this.toastCtrl.create({ message: msg, duration: 2000, color });
     toast.present();
   }
 }

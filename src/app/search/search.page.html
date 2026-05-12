@@ -32,15 +32,15 @@
         <div class="movie-card" (click)="goToDetail(movie)">
           <div class="poster-wrapper">
             <img
-              [src]="movie['#IMG_POSTER'] || 'assets/no-poster.png'"
-              [alt]="movie['#TITLE']"
+              [src]="movie.poster || 'assets/no-poster.png'"
+              [alt]="movie.title"
               class="movie-poster"
               (error)="$any($event.target).src='assets/no-poster.png'"
             />
           </div>
           <div class="movie-info">
-            <p class="movie-title">{{ movie['#TITLE'] }}</p>
-            <p class="movie-year">{{ movie['#YEAR'] }}</p>
+            <p class="movie-title">{{ movie.title }}</p>
+            <p class="movie-year">{{ movie.year }}</p>
           </div>
         </div>
       </ion-col>
@@ -50,5 +50,10 @@
   <div class="empty-state" *ngIf="hasSearched && filteredMovies.length === 0">
     <ion-icon name="film-outline" size="large"></ion-icon>
     <p>No movies found.</p>
+  </div>
+
+  <div class="initial-state" *ngIf="!hasSearched">
+    <ion-icon name="search-outline" size="large"></ion-icon>
+    <p>Search for a movie to get started.</p>
   </div>
 </ion-content>

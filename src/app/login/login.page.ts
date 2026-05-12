@@ -1,71 +1,71 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
-import { StorageService } from '../services/storage.service';
+import { ToastController, LoadingController } from '@ionic/angular';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
-  standalone: false,
+  standalone: false
 })
 export class LoginPage {
-  email = '';
+  email    = '';
   password = '';
   isSignUp = false;
 
   constructor(
-    private storageService: StorageService,
+    private authService: AuthService,
     private router: Router,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private loadingCtrl: LoadingController
   ) {}
 
   async handleAuth() {
     if (!this.email || !this.password) {
-      this.showToast('Please fill in all fields.');
+      this.showToast('Please fill in all fields.', 'danger');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.email)) {
-      this.showToast('Please enter a valid email address.');
+      this.showToast('Please enter a valid email address.', 'danger');
       return;
     }
 
     if (this.password.length < 6) {
-      this.showToast('Password must be at least 6 characters.');
+      this.showToast('Password must be at least 6 characters.', 'danger');
       return;
     }
 
-    try {
-      if (this.isSignUp) {
-        await this.storageService.saveUser(this.email, this.password);
-        await this.storageService.setCurrentUser(this.email);
+    const loading = await this.loadingCtrl.create({ message: 'Please wait...' });
+    await loading.present();
+
+    const action$ = this.isSignUp
+      ? this.authService.register(this.email, this.password)
+      : this.authService.login(this.email, this.password);
+
+    action$.subscribe({
+      next: async () => {
+        await loading.dismiss();
         this.router.navigate(['/tabs/search']);
-      } else {
-        const valid = await this.storageService.validateLogin(this.email, this.password);
-        if (valid) {
-          await this.storageService.setCurrentUser(this.email);
-          this.router.navigate(['/tabs/search']);
-        } else {
-          this.showToast('Invalid email or password.');
-        }
+      },
+      error: async (err) => {
+        await loading.dismiss();
+        const msg = err?.error?.message ?? (this.isSignUp
+          ? 'Registration failed. Email may already be in use.'
+          : 'Invalid email or password.');
+        this.showToast(msg, 'danger');
       }
-    } catch (error) {
-      this.showToast('Something went wrong. Please try again.');
-    }
+    });
   }
 
   toggleMode() {
     this.isSignUp = !this.isSignUp;
   }
 
-  async showToast(msg: string) {
-    const toast = await this.toastCtrl.create({
-      message: msg,
-      duration: 2000,
-      color: 'danger'
-    });
+  async showToast(msg: string, color: string = 'danger') {
+    const toast = await this.toastCtrl.create({ message: msg, duration: 2500, color });
     toast.present();
   }
 }

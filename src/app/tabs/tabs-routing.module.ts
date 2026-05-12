@@ -9,26 +9,30 @@ const routes: Routes = [
     children: [
       {
         path: 'search',
-        loadChildren: () => import('../search/search.module').then(m => m.SearchPageModule)
+        loadChildren: () =>
+          import('../search/search.module').then(m => m.SearchPageModule)
       },
       {
         path: 'watchlist',
-        loadChildren: () => import('../watchlist/watchlist.module').then(m => m.WatchlistPageModule)
+        loadChildren: () =>
+          import('../watchlist/watchlist.module').then(m => m.WatchlistPageModule)
       },
       {
         path: 'watched',
-        loadChildren: () => import('../watched/watched.module').then(m => m.WatchedPageModule)
+        loadChildren: () =>
+          import('../watched/watched.module').then(m => m.WatchedPageModule)
       },
       {
-        path: '',
-        redirectTo: 'search',
-        pathMatch: 'full'
-      }
+        path: 'stats',
+        loadChildren: () =>
+          import('../stats/stats.module').then(m => m.StatsPageModule)
+      },
+      { path: '', redirectTo: 'search', pathMatch: 'full' }
     ]
   }
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
+  imports: [RouterModule.forChild(routes)]
 })
 export class TabsPageRoutingModule {}
