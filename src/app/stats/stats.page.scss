@@ -1,14 +1,278 @@
-ion-toolbar { --background: #111; --color: #fff; }
-.stats-content { --background: #0a0a0a; padding: 16px; }
+// stats.page.scss
 
-.stat-card {
+ion-toolbar {
+  --background: #111;
+  --color: #fff;
+}
+
+.stats-content {
+  --background: #0a0a0a;
+}
+
+// ── Summary row ──────────────────────────────────────────
+.summary-row {
+  display: flex;
+  gap: 10px;
+  padding: 16px 16px 0;
+}
+
+.summary-card {
+  flex: 1;
   background: #1a1a1a;
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 12px;
+  padding: 16px 8px;
   text-align: center;
+  border: 1px solid #2a2a2a;
 
-  .stat-label { color: #888; font-size: 13px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 1px; }
-  .stat-value { color: #fff; font-size: 32px; font-weight: 700; margin: 0; }
-  .stat-sub   { color: #e50914; font-size: 14px; margin: 4px 0 0; }
+  .summary-icon {
+    font-size: 24px;
+    color: #e50914;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .summary-value {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .summary-label {
+    color: #666;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+}
+
+// ── Chart cards ──────────────────────────────────────────
+.chart-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px 16px;
+  margin: 16px 16px 0;
+  border: 1px solid #2a2a2a;
+}
+
+.chart-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.chart-subtitle {
+  color: #666;
+  font-size: 12px;
+  margin: 0 0 16px;
+}
+
+// ── Pie chart ────────────────────────────────────────────
+.pie-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pie-svg {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+
+  .pie-slice {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    stroke: #0a0a0a;
+    stroke-width: 1;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+}
+
+.pie-legend {
+  flex: 1;
+  min-width: 120px;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-label {
+    color: #ccc;
+    font-size: 13px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .legend-pct {
+    color: #888;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+// ── Bar chart ────────────────────────────────────────────
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .bar-label {
+    color: #aaa;
+    font-size: 12px;
+    width: 100px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    flex: 1;
+    background: #2a2a2a;
+    border-radius: 4px;
+    height: 16px;
+    overflow: hidden;
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+      min-width: 4px;
+    }
+  }
+
+  .bar-value {
+    color: #888;
+    font-size: 11px;
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+}
+
+// ── Genre table ──────────────────────────────────────────
+.genre-table {
+  width: 100%;
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  padding: 0 0 8px;
+  border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 4px;
+
+  span {
+    color: #555;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #1f1f1f;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.col-genre {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ccc;
+  font-size: 13px;
+
+  .genre-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+.col-count {
+  flex: 0 0 50px;
+  text-align: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.col-bar {
+  flex: 2;
+  padding-left: 8px;
+
+  .mini-bar-track {
+    background: #2a2a2a;
+    border-radius: 3px;
+    height: 8px;
+    overflow: hidden;
+
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+  }
+}
+
+// ── Empty / Loading state ────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #555;
+
+  ion-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  ion-spinner {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    font-size: 16px;
+    margin: 4px 0;
+  }
+
+  .sub {
+    font-size: 13px;
+    color: #444;
+  }
 }
