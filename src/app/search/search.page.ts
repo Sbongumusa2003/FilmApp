@@ -12,44 +12,61 @@ import { Movie, normalizeMovie } from '../models/movie.model';
   standalone: false
 })
 export class SearchPage {
-  searchQuery   = '';
-  movies: Movie[] = [];
+  searchQuery    = '';
+  movies: Movie[]         = [];
   filteredMovies: Movie[] = [];
-  hasSearched   = false;
+  hasSearched    = false;
+  isLoading      = false;
 
   constructor(
     private movieService: MovieService,
-    private authService: AuthService,
-    private router: Router,
-    private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
+    private authService:  AuthService,
+    private router:       Router,
+    private loadingCtrl:  LoadingController,
+    private toastCtrl:    ToastController
   ) {}
 
   async searchMovies() {
-    if (!this.searchQuery.trim()) return;
+    const query = this.searchQuery.trim();
+    if (!query) return;
+
+    // Prevent duplicate calls if already loading
+    if (this.isLoading) return;
+    this.isLoading = true;
 
     const loading = await this.loadingCtrl.create({ message: 'Searching...' });
     await loading.present();
 
-    this.movieService.searchMovies(this.searchQuery).subscribe({
+    this.movieService.searchMovies(query).subscribe({
       next: async (data: any) => {
         this.movies         = Array.isArray(data) ? data.map(normalizeMovie) : [];
         this.filteredMovies = [...this.movies];
         this.hasSearched    = true;
+        this.isLoading      = false;
         await loading.dismiss();
       },
-      error: async () => {
+      error: async (err) => {
+        this.isLoading = false;
         await loading.dismiss();
-        this.showToast('Failed to fetch movies. Check your connection.', 'danger');
+        const msg = err?.error?.message ?? 'Failed to fetch movies. Check your connection.';
+        this.showToast(msg, 'danger');
       }
     });
   }
 
+  // Only filters the already-fetched local list — does NOT call the backend
   filterResults(event: any) {
-    const val = event.target.value?.toLowerCase() ?? '';
+    const val = (event.target?.value ?? '').toLowerCase();
     this.filteredMovies = this.movies.filter(m =>
       m.title?.toLowerCase().includes(val)
     );
+  }
+
+  // Allow searching by pressing Enter on the keyboard
+  onSearchbarKeyup(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      this.searchMovies();
+    }
   }
 
   goToDetail(movie: Movie) {
