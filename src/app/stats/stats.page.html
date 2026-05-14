@@ -39,29 +39,11 @@
     </div>
 
     <!-- ── Pie Chart: Top 6 Genres from Watched List ── -->
-    <div class="chart-card" *ngIf="totalMovies > 0 && pieSlices.length > 0">
+    <div class="chart-card" *ngIf="totalMovies > 0 && genreRows.length > 0">
       <h2 class="chart-title">Top Genres in your Watched List</h2>
-
-      <div class="pie-container">
-        <svg class="pie-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(100,100)">
-            <path
-              *ngFor="let slice of pieSlices"
-              [attr.d]="slice.path"
-              [attr.fill]="slice.color"
-              class="pie-slice"
-              (click)="highlightGenre(slice.label)">
-            </path>
-          </g>
-        </svg>
-
-        <div class="pie-legend">
-          <div class="legend-item" *ngFor="let slice of pieSlices">
-            <span class="legend-dot" [style.background]="slice.color"></span>
-            <span class="legend-label">{{ slice.label }}</span>
-            <span class="legend-pct">{{ slice.percentage }}%</span>
-          </div>
-        </div>
+      <p class="chart-subtitle">Based on your watched movies</p>
+      <div class="pie-wrapper">
+        <canvas id="genrePieChart"></canvas>
       </div>
     </div>
 
@@ -117,7 +99,7 @@
       </div>
     </div>
 
-    <!-- ── Empty state (no watched movies) ── -->
+    <!-- ── Empty state ── -->
     <div class="empty-state" *ngIf="totalMovies === 0">
       <ion-icon name="bar-chart-outline"></ion-icon>
       <p>No data yet.</p>
