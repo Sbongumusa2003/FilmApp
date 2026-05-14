@@ -21,8 +21,9 @@
               (error)="$any($event.target).src='assets/no-poster.png'"
             />
             <div class="card-actions">
+              <!-- Pass movie.id (number) — not movie.title -->
               <ion-button fill="clear" class="icon-btn"
-                (click)="removeMovie(movie.title, $event)">
+                (click)="removeMovie(movie.id, $event)">
                 <ion-icon name="close-circle" color="danger"></ion-icon>
               </ion-button>
             </div>

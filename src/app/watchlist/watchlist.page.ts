@@ -35,8 +35,10 @@ export class WatchlistPage {
     this.router.navigate(['/movie-detail'], { state: { movie } });
   }
 
-  async removeMovie(title: string, event: Event) {
+  async removeMovie(id: number | undefined, event: Event) {
     event.stopPropagation();
+    if (id == null) return;
+
     const alert = await this.alertCtrl.create({
       header: 'Remove Movie',
       message: 'Remove this from your Watchlist?',
@@ -46,9 +48,9 @@ export class WatchlistPage {
           text: 'Remove',
           role: 'destructive',
           handler: () => {
-            this.watchlistService.removeFromWatchlist(title).subscribe({
+            this.watchlistService.removeFromWatchlist(id).subscribe({
               next: () => {
-                this.movies = this.movies.filter(m => m.title !== title);
+                this.movies = this.movies.filter(m => m.id !== id);
                 this.showToast('Removed from Watchlist.', 'medium');
               },
               error: () => this.showToast('Failed to remove movie.', 'danger')

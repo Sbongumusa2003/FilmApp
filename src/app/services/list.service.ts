@@ -18,10 +18,12 @@ export class WatchlistService {
     return this.http.post<Movie>(this.apiUrl, movie);
   }
 
-  removeFromWatchlist(title: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${encodeURIComponent(title)}`);
+  /** DELETE /api/watchlist/{id} — uses primary key, not title */
+  removeFromWatchlist(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
+
 @Injectable({ providedIn: 'root' })
 export class WatchedService {
   private apiUrl = `${environment.apiUrl}/watched`;
