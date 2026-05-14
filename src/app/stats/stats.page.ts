@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { WatchedService } from '../services/list.service';
@@ -17,7 +17,7 @@ interface GenreRow {
   styleUrls:   ['./stats.page.scss'],
   standalone:  false
 })
-export class StatsPage implements OnInit {
+export class StatsPage implements OnDestroy {
 
   public readonly GENRE_COLORS: string[] = [
     '#e50914', '#ff9f40', '#4bc0c0',
@@ -30,6 +30,7 @@ export class StatsPage implements OnInit {
   avgViews    = '0';
   topMovies: Movie[]    = [];
   genreRows: GenreRow[] = [];
+  top6Genres: GenreRow[] = [];
 
   isLoading = true;
 
@@ -44,10 +45,27 @@ export class StatsPage implements OnInit {
     private toastCtrl:      ToastController
   ) {}
 
-  ngOnInit() {}
+  ngOnDestroy() {
+    this.destroyChart();
+  }
 
+  // ionViewWillEnter: load data
   ionViewWillEnter() {
     this.loadStats();
+  }
+
+  // ionViewDidEnter: DOM is definitely ready — safe to draw chart
+  ionViewDidEnter() {
+    if (!this.isLoading && this.top6Genres.length > 0) {
+      this.createPieChart(this.top6Genres);
+    }
+  }
+
+  private destroyChart() {
+    if (this.pieChart) {
+      this.pieChart.destroy();
+      this.pieChart = null;
+    }
   }
 
   loadStats() {
@@ -57,17 +75,19 @@ export class StatsPage implements OnInit {
     this.avgViews    = '0';
     this.topMovies   = [];
     this.genreRows   = [];
-
-    // Destroy existing chart before re-creating
-    if (this.pieChart) {
-      this.pieChart.destroy();
-      this.pieChart = null;
-    }
+    this.top6Genres  = [];
+    this.destroyChart();
 
     this.watchedService.getWatchedList().subscribe({
       next: movies => {
-        this.isLoading = false;
         this.buildStats(movies);
+        this.isLoading = false;
+        // Wait for *ngIf to render the canvas, then draw
+        setTimeout(() => {
+          if (this.top6Genres.length > 0) {
+            this.createPieChart(this.top6Genres);
+          }
+        }, 200);
       },
       error: () => {
         this.isLoading = false;
@@ -96,6 +116,7 @@ export class StatsPage implements OnInit {
       .sort((a, b) => b.count - a.count);
 
     this.genreRows     = sorted;
+    this.top6Genres    = sorted.slice(0, 6);
     this.maxGenreCount = sorted[0]?.count ?? 1;
 
     // Top 10 most-watched movies for bar chart
@@ -103,20 +124,16 @@ export class StatsPage implements OnInit {
       .sort((a, b) => (b.timesWatched ?? 1) - (a.timesWatched ?? 1))
       .slice(0, 10);
     this.maxTimesWatched = this.topMovies[0]?.timesWatched ?? 1;
-
-    // Build pie chart after view renders
-    if (sorted.length > 0) {
-      setTimeout(() => this.createPieChart(sorted.slice(0, 6)), 100);
-    }
   }
 
   private createPieChart(top6: GenreRow[]) {
     const canvas = document.getElementById('genrePieChart') as HTMLCanvasElement;
-    if (!canvas) return;
-
-    if (this.pieChart) {
-      this.pieChart.destroy();
+    if (!canvas) {
+      console.warn('genrePieChart canvas not found in DOM');
+      return;
     }
+
+    this.destroyChart();
 
     const labels = top6.map(r => r.genre);
     const data   = top6.map(r => r.count);
@@ -129,12 +146,13 @@ export class StatsPage implements OnInit {
         datasets: [{
           data,
           backgroundColor: colors,
-          borderColor: '#0a0a0a',
+          borderColor: '#1a1a1a',
           borderWidth: 2
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: true,
         plugins: {
           legend: {
             display: true,
@@ -162,6 +180,11 @@ export class StatsPage implements OnInit {
   }
 
   // ── Template helpers ─────────────────────────────────────
+
+  genrePercent(count: number): number {
+    const total = this.top6Genres.reduce((s, r) => s + r.count, 0);
+    return total > 0 ? Math.round((count / total) * 100) : 0;
+  }
 
   barWidth(times: number): number {
     if (this.maxTimesWatched === 0) return 0;

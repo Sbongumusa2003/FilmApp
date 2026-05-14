@@ -39,11 +39,25 @@
     </div>
 
     <!-- ── Pie Chart: Top 6 Genres from Watched List ── -->
-    <div class="chart-card" *ngIf="totalMovies > 0 && genreRows.length > 0">
+    <div class="chart-card" *ngIf="totalMovies > 0 && top6Genres.length > 0">
       <h2 class="chart-title">Top Genres in your Watched List</h2>
       <p class="chart-subtitle">Based on your watched movies</p>
       <div class="pie-wrapper">
         <canvas id="genrePieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ── Genre Cards Grid (matches reference screenshot) ── -->
+    <div class="chart-card" *ngIf="top6Genres.length > 0">
+      <div class="genre-cards-grid">
+        <div class="genre-card" *ngFor="let row of top6Genres; let i = index">
+          <div class="genre-dot-large" [style.background]="GENRE_COLORS[i % GENRE_COLORS.length]"></div>
+          <div class="genre-card-info">
+            <p class="genre-card-name">{{ row.genre }}</p>
+            <p class="genre-card-count">{{ row.count }}</p>
+            <p class="genre-card-label">movies</p>
+          </div>
+        </div>
       </div>
     </div>
 

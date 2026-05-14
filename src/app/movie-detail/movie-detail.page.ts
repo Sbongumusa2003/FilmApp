@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { NavController, ToastController } from '@ionic/angular';
+import { NavController, ToastController, LoadingController } from '@ionic/angular';
 import { WatchlistService, WatchedService } from '../services/list.service';
+import { MovieService } from '../services/movie.service';
 import { Movie, normalizeMovie } from '../models/movie.model';
 
 @Component({
@@ -14,13 +15,16 @@ export class MovieDetailPage implements OnInit {
   movie: Movie | null = null;
   inWatchlist = false;
   inWatched   = false;
+  isLoadingDetails = false;
 
   constructor(
     private router: Router,
     private navCtrl: NavController,
     private watchlistService: WatchlistService,
     private watchedService: WatchedService,
-    private toastCtrl: ToastController
+    private movieService: MovieService,
+    private toastCtrl: ToastController,
+    private loadingCtrl: LoadingController
   ) {
     const nav = this.router.getCurrentNavigation();
     const raw = nav?.extras?.state?.['movie'];
@@ -28,7 +32,37 @@ export class MovieDetailPage implements OnInit {
   }
 
   ngOnInit() {
+    // If genre is missing (movie came from search results which don't include genre),
+    // fetch full details from the backend so genre is available for stats
+    if (this.movie && !this.movie.genre) {
+      this.fetchFullDetails();
+    }
     this.checkListStatus();
+  }
+
+  private fetchFullDetails() {
+    if (!this.movie?.title) return;
+    this.isLoadingDetails = true;
+
+    this.movieService.getMovieDetail(this.movie.title).subscribe({
+      next: (detail) => {
+        if (detail && this.movie) {
+          // Merge full details into current movie object, keeping id/timesWatched if set
+          this.movie = {
+            ...this.movie,
+            genre:   detail.genre   || this.movie.genre,
+            actors:  detail.actors  || this.movie.actors,
+            plot:    detail.plot    || this.movie.plot,
+            poster:  detail.poster  || this.movie.poster,
+          };
+        }
+        this.isLoadingDetails = false;
+      },
+      error: () => {
+        // Non-critical — page still works, genre just won't be in stats
+        this.isLoadingDetails = false;
+      }
+    });
   }
 
   private checkListStatus() {
@@ -66,6 +100,12 @@ export class MovieDetailPage implements OnInit {
 
   markAsWatched() {
     if (!this.movie || this.inWatched) return;
+
+    // If details are still loading, wait briefly then proceed
+    if (this.isLoadingDetails) {
+      setTimeout(() => this.markAsWatched(), 300);
+      return;
+    }
 
     this.watchedService.markAsWatched(this.movie).subscribe({
       next: () => {

@@ -54,6 +54,10 @@ ion-toolbar {
   padding: 20px 16px;
   margin: 16px 16px 0;
   border: 1px solid #2a2a2a;
+
+  &:last-of-type {
+    margin-bottom: 24px;
+  }
 }
 
 .chart-title {
@@ -70,61 +74,68 @@ ion-toolbar {
 }
 
 // ── Pie chart ────────────────────────────────────────────
-.pie-container {
+.pie-wrapper {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+
+  canvas {
+    display: block;
+    width: 100% !important;
+  }
+}
+
+// ── Genre cards grid (matches reference screenshot) ───────
+.genre-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.genre-card {
+  background: #242424;
+  border-radius: 10px;
+  padding: 14px 12px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
+  gap: 12px;
+  border: 1px solid #2e2e2e;
 
-.pie-svg {
-  width: 160px;
-  height: 160px;
-  flex-shrink: 0;
-
-  .pie-slice {
-    cursor: pointer;
-    transition: opacity 0.2s;
-    stroke: #0a0a0a;
-    stroke-width: 1;
-
-    &:hover {
-      opacity: 0.85;
-    }
-  }
-}
-
-.pie-legend {
-  flex: 1;
-  min-width: 120px;
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .legend-dot {
+  .genre-dot-large {
     width: 10px;
     height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  .legend-label {
-    color: #ccc;
-    font-size: 13px;
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  .genre-card-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 
-  .legend-pct {
-    color: #888;
-    font-size: 12px;
-    font-weight: 600;
+    .genre-card-name {
+      color: #ccc;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0 0 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .genre-card-count {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1;
+    }
+
+    .genre-card-label {
+      color: #666;
+      font-size: 11px;
+      margin: 2px 0 0;
+    }
   }
 }
 
