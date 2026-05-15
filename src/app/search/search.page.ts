@@ -12,11 +12,10 @@ import { Movie, normalizeMovie } from '../models/movie.model';
   standalone: false
 })
 export class SearchPage {
-  searchQuery    = '';
-  movies: Movie[]         = [];
-  filteredMovies: Movie[] = [];
-  hasSearched    = false;
-  isLoading      = false;
+  searchQuery = '';
+  movies: Movie[] = [];
+  hasSearched = false;
+  isLoading   = false;
 
   constructor(
     private movieService: MovieService,
@@ -28,21 +27,17 @@ export class SearchPage {
 
   async searchMovies() {
     const query = this.searchQuery.trim();
-    if (!query) return;
+    if (!query || this.isLoading) return;
 
-    // Prevent duplicate calls if already loading
-    if (this.isLoading) return;
     this.isLoading = true;
-
     const loading = await this.loadingCtrl.create({ message: 'Searching...' });
     await loading.present();
 
     this.movieService.searchMovies(query).subscribe({
       next: async (data: any) => {
-        this.movies         = Array.isArray(data) ? data.map(normalizeMovie) : [];
-        this.filteredMovies = [...this.movies];
-        this.hasSearched    = true;
-        this.isLoading      = false;
+        this.movies      = Array.isArray(data) ? data.map(normalizeMovie) : [];
+        this.hasSearched = true;
+        this.isLoading   = false;
         await loading.dismiss();
       },
       error: async (err) => {
@@ -54,19 +49,8 @@ export class SearchPage {
     });
   }
 
-  // Only filters the already-fetched local list — does NOT call the backend
-  filterResults(event: any) {
-    const val = (event.target?.value ?? '').toLowerCase();
-    this.filteredMovies = this.movies.filter(m =>
-      m.title?.toLowerCase().includes(val)
-    );
-  }
-
-  // Allow searching by pressing Enter on the keyboard
   onSearchbarKeyup(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      this.searchMovies();
-    }
+    if (event.key === 'Enter') this.searchMovies();
   }
 
   goToDetail(movie: Movie) {

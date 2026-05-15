@@ -2,8 +2,11 @@ import { Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { WatchedService } from '../services/list.service';
+import { MovieService } from '../services/movie.service';
 import { AuthService } from '../services/auth.service';
 import { Movie } from '../models/movie.model';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import Chart from 'chart.js/auto';
 
 interface GenreRow {
@@ -28,66 +31,89 @@ export class StatsPage implements OnDestroy {
   totalMovies = 0;
   totalViews  = 0;
   avgViews    = '0';
-  topMovies: Movie[]    = [];
-  genreRows: GenreRow[] = [];
+  topMovies: Movie[]     = [];
+  genreRows: GenreRow[]  = [];
   top6Genres: GenreRow[] = [];
 
-  isLoading = true;
+  isLoading   = true;
+  isEnriching = false;
 
-  private maxTimesWatched = 1;
-  private maxGenreCount   = 1;
+  private maxGenreCount = 1;
   private pieChart: Chart | null = null;
+  private barChart: Chart | null = null;
 
   constructor(
     private watchedService: WatchedService,
+    private movieService:   MovieService,
     private authService:    AuthService,
     private router:         Router,
     private toastCtrl:      ToastController
   ) {}
 
   ngOnDestroy() {
-    this.destroyChart();
+    this.destroyCharts();
   }
 
-  // ionViewWillEnter: load data
   ionViewWillEnter() {
     this.loadStats();
   }
 
-  // ionViewDidEnter: DOM is definitely ready — safe to draw chart
   ionViewDidEnter() {
-    if (!this.isLoading && this.top6Genres.length > 0) {
-      this.createPieChart(this.top6Genres);
+    if (!this.isLoading) {
+      if (this.top6Genres.length > 0) this.createPieChart(this.top6Genres);
+      if (this.topMovies.length > 0)  this.createBarChart(this.topMovies);
     }
   }
 
-  private destroyChart() {
-    if (this.pieChart) {
-      this.pieChart.destroy();
-      this.pieChart = null;
-    }
+  private destroyCharts() {
+    if (this.pieChart) { this.pieChart.destroy(); this.pieChart = null; }
+    if (this.barChart) { this.barChart.destroy(); this.barChart = null; }
   }
 
   loadStats() {
-    this.isLoading = true;
+    this.isLoading   = true;
+    this.isEnriching = false;
     this.totalMovies = 0;
     this.totalViews  = 0;
     this.avgViews    = '0';
     this.topMovies   = [];
     this.genreRows   = [];
     this.top6Genres  = [];
-    this.destroyChart();
+    this.destroyCharts();
 
     this.watchedService.getWatchedList().subscribe({
       next: movies => {
-        this.buildStats(movies);
-        this.isLoading = false;
-        // Wait for *ngIf to render the canvas, then draw
-        setTimeout(() => {
-          if (this.top6Genres.length > 0) {
-            this.createPieChart(this.top6Genres);
-          }
-        }, 200);
+        const missingGenre = movies.filter(m => !m.genre || m.genre.trim() === '');
+
+        if (missingGenre.length === 0) {
+          this.buildAndRender(movies);
+        } else {
+          this.isEnriching = true;
+          const enrichRequests = missingGenre.map(m =>
+            this.movieService.getMovieDetail(m.title).pipe(
+              map(detail => ({ imdbID: m.imdbID, genre: detail?.genre ?? '' })),
+              catchError(() => of({ imdbID: m.imdbID, genre: '' }))
+            )
+          );
+
+          forkJoin(enrichRequests).subscribe({
+            next: enriched => {
+              const enrichMap = new Map(enriched.map(e => [e.imdbID, e.genre]));
+              const enrichedMovies = movies.map(m => ({
+                ...m,
+                genre: (m.genre && m.genre.trim() !== '')
+                  ? m.genre
+                  : (enrichMap.get(m.imdbID) ?? '')
+              }));
+              this.isEnriching = false;
+              this.buildAndRender(enrichedMovies);
+            },
+            error: () => {
+              this.isEnriching = false;
+              this.buildAndRender(movies);
+            }
+          });
+        }
       },
       error: () => {
         this.isLoading = false;
@@ -96,13 +122,21 @@ export class StatsPage implements OnDestroy {
     });
   }
 
+  private buildAndRender(movies: Movie[]) {
+    this.buildStats(movies);
+    this.isLoading = false;
+    setTimeout(() => {
+      if (this.top6Genres.length > 0) this.createPieChart(this.top6Genres);
+      if (this.topMovies.length > 0)  this.createBarChart(this.topMovies);
+    }, 200);
+  }
+
   private buildStats(movies: Movie[]) {
     this.totalMovies = movies.length;
     this.totalViews  = movies.reduce((sum, m) => sum + (m.timesWatched ?? 1), 0);
     this.avgViews    = this.totalMovies > 0
       ? (this.totalViews / this.totalMovies).toFixed(1) : '0';
 
-    // Build genre frequency map
     const genreMap = new Map<string, number>();
     for (const movie of movies) {
       if (!movie.genre) continue;
@@ -119,35 +153,25 @@ export class StatsPage implements OnDestroy {
     this.top6Genres    = sorted.slice(0, 6);
     this.maxGenreCount = sorted[0]?.count ?? 1;
 
-    // Top 10 most-watched movies for bar chart
     this.topMovies = [...movies]
       .sort((a, b) => (b.timesWatched ?? 1) - (a.timesWatched ?? 1))
       .slice(0, 10);
-    this.maxTimesWatched = this.topMovies[0]?.timesWatched ?? 1;
   }
 
   private createPieChart(top6: GenreRow[]) {
     const canvas = document.getElementById('genrePieChart') as HTMLCanvasElement;
-    if (!canvas) {
-      console.warn('genrePieChart canvas not found in DOM');
-      return;
-    }
-
-    this.destroyChart();
-
-    const labels = top6.map(r => r.genre);
-    const data   = top6.map(r => r.count);
-    const colors = top6.map((_, i) => this.GENRE_COLORS[i % this.GENRE_COLORS.length]);
+    if (!canvas) return;
+    if (this.pieChart) { this.pieChart.destroy(); this.pieChart = null; }
 
     this.pieChart = new Chart(canvas, {
       type: 'pie',
       data: {
-        labels,
+        labels: top6.map(r => r.genre),
         datasets: [{
-          data,
-          backgroundColor: colors,
-          borderColor: '#1a1a1a',
-          borderWidth: 2
+          data:            top6.map(r => r.count),
+          backgroundColor: top6.map((_, i) => this.GENRE_COLORS[i % this.GENRE_COLORS.length]),
+          borderColor:     '#1a1a1a',
+          borderWidth:     2
         }]
       },
       options: {
@@ -157,12 +181,7 @@ export class StatsPage implements OnDestroy {
           legend: {
             display: true,
             position: 'bottom',
-            labels: {
-              color: '#ccc',
-              font: { size: 12 },
-              padding: 12,
-              boxWidth: 14
-            }
+            labels: { color: '#ccc', font: { size: 12 }, padding: 12, boxWidth: 14 }
           },
           tooltip: {
             callbacks: {
@@ -179,29 +198,75 @@ export class StatsPage implements OnDestroy {
     });
   }
 
-  // ── Template helpers ─────────────────────────────────────
+  private createBarChart(movies: Movie[]) {
+    const canvas = document.getElementById('moviesBarChart') as HTMLCanvasElement;
+    if (!canvas) return;
+    if (this.barChart) { this.barChart.destroy(); this.barChart = null; }
 
-  genrePercent(count: number): number {
-    const total = this.top6Genres.reduce((s, r) => s + r.count, 0);
-    return total > 0 ? Math.round((count / total) * 100) : 0;
-  }
+    // Truncate long titles for the y-axis labels
+    const labels = movies.map(m =>
+      m.title.length > 20 ? m.title.substring(0, 20) + '…' : m.title
+    );
+    const data   = movies.map(m => m.timesWatched ?? 1);
 
-  barWidth(times: number): number {
-    if (this.maxTimesWatched === 0) return 0;
-    return Math.round((times / this.maxTimesWatched) * 100);
-  }
+    // Colour each bar by watch count (highest = red, fades to blue)
+    const max    = Math.max(...data, 1);
+    const colors = data.map(v => {
+      const pct = v / max;
+      if (pct >= 0.75) return '#e50914';
+      if (pct >= 0.50) return '#ff9f40';
+      if (pct >= 0.25) return '#ffcd56';
+      return '#36a2eb';
+    });
 
-  barColor(times: number): string {
-    const pct = this.maxTimesWatched > 0 ? times / this.maxTimesWatched : 0;
-    if (pct >= 0.75) return '#e50914';
-    if (pct >= 0.50) return '#ff9f40';
-    if (pct >= 0.25) return '#ffcd56';
-    return '#36a2eb';
+    this.barChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label:           'Times Watched',
+          data,
+          backgroundColor: colors,
+          borderRadius:    6,
+          borderSkipped:   false
+        }]
+      },
+      options: {
+        indexAxis: 'y',          // horizontal bar chart
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.parsed.x}x watched`
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            // Always show at least 0–3 so single-watch bars aren't full-width
+            suggestedMax: Math.max(max + 1, 3),
+            ticks: {
+              color:     '#666',
+              font:      { size: 11 },
+              stepSize:  1,
+              precision: 0
+            },
+            grid: { color: '#2a2a2a' }
+          },
+          y: {
+            ticks: { color: '#aaa', font: { size: 12 } },
+            grid:  { display: false }
+          }
+        }
+      }
+    });
   }
 
   tableBarWidth(count: number): number {
-    if (this.maxGenreCount === 0) return 0;
-    return Math.round((count / this.maxGenreCount) * 100);
+    return this.maxGenreCount === 0 ? 0 : Math.round((count / this.maxGenreCount) * 100);
   }
 
   truncate(text: string, max: number): string {

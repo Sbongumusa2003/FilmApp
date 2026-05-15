@@ -27,27 +27,6 @@ ion-toolbar {
   }
 }
 
-.filter-bar {
-  padding: 0 16px 4px;
-
-  ion-searchbar {
-    --background: #1a1a1a;
-    --color: #fff;
-    --placeholder-color: #555;
-    --border-radius: 10px;
-    font-size: 13px;
-    padding: 0;
-    height: 44px;
-  }
-}
-
-.results-count {
-  color: #888;
-  font-size: 13px;
-  padding: 4px 16px 0;
-  margin: 0;
-}
-
 ion-grid {
   padding: 8px;
 }
@@ -60,9 +39,7 @@ ion-grid {
   cursor: pointer;
   transition: transform 0.15s ease;
 
-  &:active {
-    transform: scale(0.96);
-  }
+  &:active { transform: scale(0.96); }
 
   .poster-wrapper {
     width: 100%;
@@ -99,6 +76,10 @@ ion-grid {
 
 .empty-state,
 .initial-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 60px 20px;
   color: #555;
@@ -106,16 +87,10 @@ ion-grid {
   ion-icon {
     font-size: 64px;
     margin-bottom: 16px;
-    display: block;
   }
 
   p {
     font-size: 16px;
     margin: 4px 0;
-  }
-
-  .sub {
-    font-size: 13px;
-    color: #444;
   }
 }

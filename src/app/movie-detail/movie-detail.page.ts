@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { NavController, ToastController, LoadingController } from '@ionic/angular';
+import { AlertController, NavController, ToastController } from '@ionic/angular';
 import { WatchlistService, WatchedService } from '../services/list.service';
-import { MovieService } from '../services/movie.service';
 import { Movie, normalizeMovie } from '../models/movie.model';
 
 @Component({
@@ -15,16 +14,14 @@ export class MovieDetailPage implements OnInit {
   movie: Movie | null = null;
   inWatchlist = false;
   inWatched   = false;
-  isLoadingDetails = false;
 
   constructor(
-    private router: Router,
-    private navCtrl: NavController,
+    private router:           Router,
+    private navCtrl:          NavController,
+    private alertCtrl:        AlertController,
     private watchlistService: WatchlistService,
-    private watchedService: WatchedService,
-    private movieService: MovieService,
-    private toastCtrl: ToastController,
-    private loadingCtrl: LoadingController
+    private watchedService:   WatchedService,
+    private toastCtrl:        ToastController
   ) {
     const nav = this.router.getCurrentNavigation();
     const raw = nav?.extras?.state?.['movie'];
@@ -32,37 +29,7 @@ export class MovieDetailPage implements OnInit {
   }
 
   ngOnInit() {
-    // If genre is missing (movie came from search results which don't include genre),
-    // fetch full details from the backend so genre is available for stats
-    if (this.movie && !this.movie.genre) {
-      this.fetchFullDetails();
-    }
     this.checkListStatus();
-  }
-
-  private fetchFullDetails() {
-    if (!this.movie?.title) return;
-    this.isLoadingDetails = true;
-
-    this.movieService.getMovieDetail(this.movie.title).subscribe({
-      next: (detail) => {
-        if (detail && this.movie) {
-          // Merge full details into current movie object, keeping id/timesWatched if set
-          this.movie = {
-            ...this.movie,
-            genre:   detail.genre   || this.movie.genre,
-            actors:  detail.actors  || this.movie.actors,
-            plot:    detail.plot    || this.movie.plot,
-            poster:  detail.poster  || this.movie.poster,
-          };
-        }
-        this.isLoadingDetails = false;
-      },
-      error: () => {
-        // Non-critical — page still works, genre just won't be in stats
-        this.isLoadingDetails = false;
-      }
-    });
   }
 
   private checkListStatus() {
@@ -98,20 +65,73 @@ export class MovieDetailPage implements OnInit {
     });
   }
 
-  markAsWatched() {
+  async markAsWatched() {
     if (!this.movie || this.inWatched) return;
 
-    // If details are still loading, wait briefly then proceed
-    if (this.isLoadingDetails) {
-      setTimeout(() => this.markAsWatched(), 300);
-      return;
-    }
+    // Prompt user for how many times they watched it
+    const alert = await this.alertCtrl.create({
+      header: 'Times Watched',
+      message: 'How many times have you watched this movie?',
+      inputs: [
+        {
+          name:        'times',
+          type:        'number',
+          placeholder: '1',
+          value:       '1',
+          min:         1,
+          max:         99,
+          attributes: { min: 1, max: 99 }
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Confirm',
+          handler: (data) => {
+            const times = parseInt(data.times, 10);
+            if (isNaN(times) || times < 1) {
+              this.showToast('Please enter a valid number.', 'warning');
+              return false; // keep alert open
+            }
+            this.submitWatched(times);
+            return true;
+          }
+        }
+      ],
+      cssClass: 'watched-alert'
+    });
 
+    await alert.present();
+  }
+
+  private submitWatched(times: number) {
+    if (!this.movie) return;
+
+    // Post once to create the watched entry (timesWatched = 1 from backend)
     this.watchedService.markAsWatched(this.movie).subscribe({
-      next: () => {
-        this.inWatched   = true;
-        this.inWatchlist = false;
-        this.showToast('Marked as Watched!', 'success');
+      next: (created) => {
+        // If user entered more than 1, update the count
+        if (times > 1 && created?.id) {
+          this.watchedService.updateWatched(created.id, times).subscribe({
+            next: (updated) => {
+              this.inWatched   = true;
+              this.inWatchlist = false;
+              if (updated) this.movie = { ...this.movie!, timesWatched: updated.timesWatched };
+              this.showToast(`Marked as Watched × ${times}!`, 'success');
+            },
+            error: () => {
+              // Entry was created, just the count update failed
+              this.inWatched   = true;
+              this.inWatchlist = false;
+              this.showToast('Marked as Watched!', 'success');
+            }
+          });
+        } else {
+          this.inWatched   = true;
+          this.inWatchlist = false;
+          if (created) this.movie = { ...this.movie!, timesWatched: created.timesWatched };
+          this.showToast('Marked as Watched!', 'success');
+        }
       },
       error: (err) => {
         const msg = err?.error?.message ?? 'Could not mark as watched.';

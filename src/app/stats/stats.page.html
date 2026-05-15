@@ -14,7 +14,7 @@
   <!-- ── Loading state ── -->
   <div class="empty-state" *ngIf="isLoading">
     <ion-spinner name="crescent" color="danger"></ion-spinner>
-    <p>Loading stats…</p>
+    <p>{{ isEnriching ? 'Fetching genre data…' : 'Loading stats…' }}</p>
   </div>
 
   <ng-container *ngIf="!isLoading">
@@ -38,8 +38,8 @@
       </div>
     </div>
 
-    <!-- ── Pie Chart: Top 6 Genres from Watched List ── -->
-    <div class="chart-card" *ngIf="totalMovies > 0 && top6Genres.length > 0">
+    <!-- ── Pie Chart: Top 6 Genres ── -->
+    <div class="chart-card" *ngIf="top6Genres.length > 0">
       <h2 class="chart-title">Top Genres in your Watched List</h2>
       <p class="chart-subtitle">Based on your watched movies</p>
       <div class="pie-wrapper">
@@ -47,7 +47,7 @@
       </div>
     </div>
 
-    <!-- ── Genre Cards Grid (matches reference screenshot) ── -->
+    <!-- ── Genre Cards Grid ── -->
     <div class="chart-card" *ngIf="top6Genres.length > 0">
       <div class="genre-cards-grid">
         <div class="genre-card" *ngFor="let row of top6Genres; let i = index">
@@ -61,25 +61,12 @@
       </div>
     </div>
 
-    <!-- ── Bar Chart: Top 10 Most Watched Movies ── -->
+    <!-- ── Bar Chart: Most Watched Movies (Chart.js) ── -->
     <div class="chart-card" *ngIf="topMovies.length > 0">
       <h2 class="chart-title">Most Watched Movies</h2>
       <p class="chart-subtitle">By times watched</p>
-
-      <div class="bar-chart">
-        <div class="bar-row" *ngFor="let movie of topMovies">
-          <span class="bar-label" [title]="movie.title">
-            {{ truncate(movie.title, 16) }}
-          </span>
-          <div class="bar-track">
-            <div
-              class="bar-fill"
-              [style.width.%]="barWidth(movie.timesWatched ?? 1)"
-              [style.background]="barColor(movie.timesWatched ?? 1)">
-            </div>
-          </div>
-          <span class="bar-value">{{ movie.timesWatched ?? 1 }}x</span>
-        </div>
+      <div class="bar-wrapper">
+        <canvas id="moviesBarChart"></canvas>
       </div>
     </div>
 
@@ -87,7 +74,6 @@
     <div class="chart-card" *ngIf="genreRows.length > 0">
       <h2 class="chart-title">Genre Breakdown</h2>
       <p class="chart-subtitle">All genres from your Watched List</p>
-
       <div class="genre-table">
         <div class="table-header">
           <span class="col-genre">Genre</span>
@@ -102,8 +88,7 @@
           <span class="col-count">{{ row.count }}</span>
           <span class="col-bar">
             <div class="mini-bar-track">
-              <div
-                class="mini-bar-fill"
+              <div class="mini-bar-fill"
                 [style.width.%]="tableBarWidth(row.count)"
                 [style.background]="GENRE_COLORS[i % GENRE_COLORS.length]">
               </div>
@@ -111,6 +96,12 @@
           </span>
         </div>
       </div>
+    </div>
+
+    <!-- ── No genre data warning ── -->
+    <div class="chart-card" *ngIf="totalMovies > 0 && genreRows.length === 0">
+      <h2 class="chart-title">Genre data unavailable</h2>
+      <p class="chart-subtitle">Genre info could not be loaded. Try removing and re-adding movies from Search.</p>
     </div>
 
     <!-- ── Empty state ── -->
