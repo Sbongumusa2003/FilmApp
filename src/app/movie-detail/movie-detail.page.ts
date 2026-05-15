@@ -67,8 +67,6 @@ export class MovieDetailPage implements OnInit {
 
   async markAsWatched() {
     if (!this.movie || this.inWatched) return;
-
-    // Prompt user for how many times they watched it
     const alert = await this.alertCtrl.create({
       header: 'Times Watched',
       message: 'How many times have you watched this movie?',
@@ -91,7 +89,7 @@ export class MovieDetailPage implements OnInit {
             const times = parseInt(data.times, 10);
             if (isNaN(times) || times < 1) {
               this.showToast('Please enter a valid number.', 'warning');
-              return false; // keep alert open
+              return false;
             }
             this.submitWatched(times);
             return true;
@@ -106,11 +104,8 @@ export class MovieDetailPage implements OnInit {
 
   private submitWatched(times: number) {
     if (!this.movie) return;
-
-    // Post once to create the watched entry (timesWatched = 1 from backend)
     this.watchedService.markAsWatched(this.movie).subscribe({
       next: (created) => {
-        // If user entered more than 1, update the count
         if (times > 1 && created?.id) {
           this.watchedService.updateWatched(created.id, times).subscribe({
             next: (updated) => {
@@ -120,7 +115,6 @@ export class MovieDetailPage implements OnInit {
               this.showToast(`Marked as Watched × ${times}!`, 'success');
             },
             error: () => {
-              // Entry was created, just the count update failed
               this.inWatched   = true;
               this.inWatchlist = false;
               this.showToast('Marked as Watched!', 'success');

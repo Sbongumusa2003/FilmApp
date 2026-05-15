@@ -18,8 +18,6 @@
   </div>
 
   <ng-container *ngIf="!isLoading">
-
-    <!-- ── Summary Cards ── -->
     <div class="summary-row">
       <div class="summary-card">
         <ion-icon name="film-outline" class="summary-icon"></ion-icon>
@@ -37,8 +35,6 @@
         <p class="summary-label">Avg Views</p>
       </div>
     </div>
-
-    <!-- ── Pie Chart: Top 6 Genres ── -->
     <div class="chart-card" *ngIf="top6Genres.length > 0">
       <h2 class="chart-title">Top Genres in your Watched List</h2>
       <p class="chart-subtitle">Based on your watched movies</p>
@@ -46,8 +42,6 @@
         <canvas id="genrePieChart"></canvas>
       </div>
     </div>
-
-    <!-- ── Genre Cards Grid ── -->
     <div class="chart-card" *ngIf="top6Genres.length > 0">
       <div class="genre-cards-grid">
         <div class="genre-card" *ngFor="let row of top6Genres; let i = index">
@@ -60,8 +54,6 @@
         </div>
       </div>
     </div>
-
-    <!-- ── Bar Chart: Most Watched Movies (Chart.js) ── -->
     <div class="chart-card" *ngIf="topMovies.length > 0">
       <h2 class="chart-title">Most Watched Movies</h2>
       <p class="chart-subtitle">By times watched</p>
@@ -69,8 +61,6 @@
         <canvas id="moviesBarChart"></canvas>
       </div>
     </div>
-
-    <!-- ── Table: Genre Breakdown ── -->
     <div class="chart-card" *ngIf="genreRows.length > 0">
       <h2 class="chart-title">Genre Breakdown</h2>
       <p class="chart-subtitle">All genres from your Watched List</p>
@@ -97,14 +87,10 @@
         </div>
       </div>
     </div>
-
-    <!-- ── No genre data warning ── -->
     <div class="chart-card" *ngIf="totalMovies > 0 && genreRows.length === 0">
       <h2 class="chart-title">Genre data unavailable</h2>
       <p class="chart-subtitle">Genre info could not be loaded. Try removing and re-adding movies from Search.</p>
     </div>
-
-    <!-- ── Empty state ── -->
     <div class="empty-state" *ngIf="totalMovies === 0">
       <ion-icon name="bar-chart-outline"></ion-icon>
       <p>No data yet.</p>

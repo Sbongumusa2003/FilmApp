@@ -6,8 +6,6 @@ ion-toolbar {
 .stats-content {
   --background: #0a0a0a;
 }
-
-// ── Summary row ──────────────────────────────────────────
 .summary-row {
   display: flex;
   gap: 10px;
@@ -44,8 +42,6 @@ ion-toolbar {
     margin: 0;
   }
 }
-
-// ── Chart cards ──────────────────────────────────────────
 .chart-card {
   background: #1a1a1a;
   border-radius: 12px;
@@ -71,7 +67,6 @@ ion-toolbar {
   margin: 0 0 16px;
 }
 
-// ── Pie chart ────────────────────────────────────────────
 .pie-wrapper {
   width: 100%;
   max-width: 320px;
@@ -82,13 +77,9 @@ ion-toolbar {
     width: 100% !important;
   }
 }
-
-// ── Bar chart (Chart.js horizontal) ──────────────────────
-// Height scales with number of movies so bars aren't squished
 .bar-wrapper {
   position: relative;
   width: 100%;
-  // 40px per bar row + some padding; capped at a comfortable scroll height
   height: calc(var(--bar-count, 6) * 42px + 20px);
   min-height: 200px;
 
@@ -98,8 +89,6 @@ ion-toolbar {
     height: 100% !important;
   }
 }
-
-// ── Genre cards grid ─────────────────────────────────────
 .genre-cards-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -152,8 +141,6 @@ ion-toolbar {
     }
   }
 }
-
-// ── Genre table ──────────────────────────────────────────
 .genre-table { width: 100%; }
 
 .table-header {
@@ -221,8 +208,6 @@ ion-toolbar {
     }
   }
 }
-
-// ── Empty / Loading state ────────────────────────────────
 .empty-state {
   display: flex;
   flex-direction: column;

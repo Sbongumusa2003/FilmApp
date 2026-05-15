@@ -1,5 +1,3 @@
-// ── Movie model aligned with the .NET backend ──────────────────────
-
 export interface Movie {
   id?: number;
   imdbID: string;

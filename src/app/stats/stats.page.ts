@@ -203,13 +203,10 @@ export class StatsPage implements OnDestroy {
     if (!canvas) return;
     if (this.barChart) { this.barChart.destroy(); this.barChart = null; }
 
-    // Truncate long titles for the y-axis labels
     const labels = movies.map(m =>
       m.title.length > 20 ? m.title.substring(0, 20) + '…' : m.title
     );
     const data   = movies.map(m => m.timesWatched ?? 1);
-
-    // Colour each bar by watch count (highest = red, fades to blue)
     const max    = Math.max(...data, 1);
     const colors = data.map(v => {
       const pct = v / max;
@@ -232,7 +229,7 @@ export class StatsPage implements OnDestroy {
         }]
       },
       options: {
-        indexAxis: 'y',          // horizontal bar chart
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -246,7 +243,6 @@ export class StatsPage implements OnDestroy {
         scales: {
           x: {
             beginAtZero: true,
-            // Always show at least 0–3 so single-watch bars aren't full-width
             suggestedMax: Math.max(max + 1, 3),
             ticks: {
               color:     '#666',
