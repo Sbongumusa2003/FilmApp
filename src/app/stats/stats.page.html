@@ -10,8 +10,6 @@
 </ion-header>
 
 <ion-content class="stats-content">
-
-  <!-- ── Loading state ── -->
   <div class="empty-state" *ngIf="isLoading">
     <ion-spinner name="crescent" color="danger"></ion-spinner>
     <p>{{ isEnriching ? 'Fetching genre data…' : 'Loading stats…' }}</p>
